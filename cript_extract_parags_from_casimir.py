@@ -490,11 +490,11 @@ def first_is_problem(phrase_source,phrase_cible):
     #Cas que jaune
     if len(phrase_source["text"])>0:
         #Check that the first alphabetical letter is a capital letter
-        debut_1_ko= check_incorrect_beginning(phrase_source_no_tag)
+        debut_1_ko= check_incorrect_beginning(phrase_source["text"])
     else:
         debut_1_ko=False
     if len(phrase_cible["text"])>0:
-        debut_2_ko= check_incorrect_beginning(phrase_cible_no_tag)
+        debut_2_ko= check_incorrect_beginning(phrase_cible["text"])
     else:
         debut_2_ko=False
     if debut_1_ko or debut_2_ko:
@@ -569,7 +569,7 @@ def verif_balise(liste_text_1, full_text_2):
         if idx_debut!=0:
             baliseok = baliseok and not(check_incorrect_beginning(cropped_liste_text_1[0]))
         #Before the tags at the end, does the paragraph end correctly
-        if idx_fin!=len(liste_text_1):
+        if idx_fin!=len(cropped_liste_text_1):
             baliseok = baliseok and not(check_incorrect_ending(cropped_liste_text_1[-1]))
         if not baliseok:
             return baliseok
