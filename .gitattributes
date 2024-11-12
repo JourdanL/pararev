@@ -1,3 +1,5 @@
 corpus_parag.jsonl filter=lfs diff=lfs merge=lfs -text
 *.csv filter=lfs diff=lfs merge=lfs -text
 *.jsonl filter=lfs diff=lfs merge=lfs -text
+manual* filter=lfs diff=lfs merge=lfs -text
+manual_annot_eval_subset.jsonl filter=lfs diff=lfs merge=lfs -text
