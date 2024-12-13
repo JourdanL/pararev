@@ -1,111 +1,103 @@
 import json
 import os
-import sys
 import re
 import argparse
-from termcolor import colored, cprint
 
 # I - Utils
 
-def import_data(path,filename):
-    with open(path+filename, 'r') as article_file:
-        diff_article=[json.loads(line.strip('\n')) for line in article_file]  
-    return diff_article
-
 # Function to remove specific tags
-def remove_tags(chaine):
-    balises = ["[Figure]", "[Equation]", "[Table]"]
-    for balise in balises:
-        chaine = chaine.replace(balise, "")
-    return chaine
+def remove_tags(string):
+    tags = ["[Figure]", "[Equation]", "[Table]"]
+    for tag in tags:
+        string = string.replace(tag, "")
+    return string
 
-def sont_egales_sans_espaces(chaine1, chaine2):
-    # Supprimer les espaces des deux chaînes
-    chaine1_sans_espaces = re.sub(r'\s', '', chaine1)
-    chaine2_sans_espaces = re.sub(r'\s', '', chaine2)
+def are_equals_without_space(string1, string2):
+    # Delete spaces in the two strings
+    string1_without_space = re.sub(r'\s', '', string1)
+    string2_without_space = re.sub(r'\s', '', string2)
 
-    # Comparer les chaînes sans espaces
-    return chaine1_sans_espaces == chaine2_sans_espaces
+    # Compare strings without spaces
+    return string1_without_space == string2_without_space
 
-def enlever_espaces(chaine):
-    # Supprimer les espaces des deux chaînes
-    chaine_sans_espaces = re.sub(r'\s', '', chaine)
+def remove_spaces(string):
+   # Delete spaces
+    string_without_space = re.sub(r'\s', '', string)
 
-    # Comparer les chaînes sans espaces
-    return chaine_sans_espaces
+    return string_without_space
 
 
-def recollage_parag_nocolor(parag_source,parag_cible):                          
+def assembling_parag_nocolor(parag_source,parag_target):                          
     end_with_space=True
-    parag_source_complet=""
-    for ligne in parag_source:
-        if len(ligne)>0:
-            start_with_space=(ligne[0]==' ')
+    parag_source_full=""
+    for line in parag_source:
+        if len(line)>0:
+            start_with_space=(line[0]==' ')
             if end_with_space or start_with_space:
-                parag_source_complet+=ligne
+                parag_source_full+=line
             else:
-                parag_source_complet+=' '
-                parag_source_complet+=ligne
-            end_with_space=(ligne[-1]==' ')
-    parag_cible_complet=""
+                parag_source_full+=' '
+                parag_source_full+=line
+            end_with_space=(line[-1]==' ')
+    parag_target_full=""
     end_with_space=True
-    for ligne in parag_cible:
-        if len(ligne)>0:
-            start_with_space=(ligne[0]==' ')
+    for line in parag_target:
+        if len(line)>0:
+            start_with_space=(line[0]==' ')
             if end_with_space or start_with_space:
-                parag_cible_complet+=ligne
+                parag_target_full+=line
             else:
-                parag_cible_complet+=' '
-                parag_cible_complet+=ligne
-            end_with_space=(ligne[-1]==' ')
-    return  parag_source_complet,parag_cible_complet
+                parag_target_full+=' '
+                parag_target_full+=line
+            end_with_space=(line[-1]==' ')
+    return  parag_source_full,parag_target_full
 
 # II - Data preparation
 
-def calcul_longeur_modif(phrase,sentence_token_indices):
-    debut_sent=0
-    fin_sent=0
+def calculation_modifications_length(sentence,sentence_token_indices):
+    begin_sent=0
+    end_sent=0
     if type(sentence_token_indices)==list:
-        debut_sent=sentence_token_indices[0]
-        fin_sent=sentence_token_indices[1]
-        extracted_edit=remove_tags(phrase[debut_sent:fin_sent])
+        begin_sent=sentence_token_indices[0]
+        end_sent=sentence_token_indices[1]
+        extracted_edit=remove_tags(sentence[begin_sent:end_sent])
         
-        longeur_modif=len(extracted_edit)#fin_sent-debut_sent
+        modifications_length=len(extracted_edit)
     else:
-        longeur_modif=0
+        modifications_length=0
     
-    return longeur_modif
+    return modifications_length
 
-def calcul_pourcentages_modifs(element):
-    longeur_modif_1=0
-    longeur_modif_2=0
+def calculation_modifications_percentage(element):
+    length_modif_1=0
+    length_modif_2=0
     for idx_elt in range(len(element['edits-combination'])):
         if type(element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])==list and type(element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])==list:
-            debut_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
-            fin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
-            debut_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
-            fin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
+            begin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
+            end_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
+            begin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
+            end_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
 
-            if not(sont_egales_sans_espaces(element['text-sentence-1'][debut_sent1:fin_sent1],element['text-sentence-2'][debut_sent2:fin_sent2])):
-                longeur_modif_1+=calcul_longeur_modif(element['text-sentence-1'],element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])
-                longeur_modif_2+=calcul_longeur_modif(element['text-sentence-2'],element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])
+            if not(are_equals_without_space(element['text-sentence-1'][begin_sent1:end_sent1],element['text-sentence-2'][begin_sent2:end_sent2])):
+                length_modif_1+=calculation_modifications_length(element['text-sentence-1'],element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])
+                length_modif_2+=calculation_modifications_length(element['text-sentence-2'],element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])
         else:
-            longeur_modif_1+=calcul_longeur_modif(element['text-sentence-1'],element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])
-            longeur_modif_2+=calcul_longeur_modif(element['text-sentence-2'],element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])
+            length_modif_1+=calculation_modifications_length(element['text-sentence-1'],element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])
+            length_modif_2+=calculation_modifications_length(element['text-sentence-2'],element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])
 
-    #Calcul des pourcentages modifs
-    longueur_phrase_1_ss_balise=len(remove_tags(element['text-sentence-1']))
-    longueur_phrase_2_ss_balise=len(remove_tags(element['text-sentence-2']))
-    if longueur_phrase_1_ss_balise>0:
-        pourcentage_modif_1=longeur_modif_1/longueur_phrase_1_ss_balise
+    #Calculation of modifications percentage
+    length_sent_1_without_tags=len(remove_tags(element['text-sentence-1']))
+    length_sent_2_without_tags=len(remove_tags(element['text-sentence-2']))
+    if length_sent_1_without_tags>0:
+        percentage_modif_1=length_modif_1/length_sent_1_without_tags
     else:
-        pourcentage_modif_1=0
-    if longueur_phrase_2_ss_balise>0:
-        pourcentage_modif_2=longeur_modif_2/longueur_phrase_2_ss_balise
+        percentage_modif_1=0
+    if length_sent_2_without_tags>0:
+        percentage_modif_2=length_modif_2/length_sent_2_without_tags
     else:
-        pourcentage_modif_2=0
+        percentage_modif_2=0
         
-    return pourcentage_modif_1,pourcentage_modif_2,longueur_phrase_1_ss_balise,longueur_phrase_2_ss_balise
+    return percentage_modif_1,percentage_modif_2,length_sent_1_without_tags,length_sent_2_without_tags
 
 def get_new_num_section(element):
     if "num_section-sentence-1" in element:
@@ -135,7 +127,7 @@ def get_new_num_parag(element):
             new_num_parag_2=-2
     return new_num_parag_1,new_num_parag_2         
 
-def get_list_paires_parag(diff_article,seuil_bas=0.5):
+def get_list_pairs_parag(diff_article,low_threshold=0.5):
     #Initialisations
     old_num_parag_1=-1
     old_num_parag_2=-1
@@ -144,32 +136,32 @@ def get_list_paires_parag(diff_article,seuil_bas=0.5):
     aggreg_parag_1=[]
     aggreg_parag_2=[]
     
-    liste_sections=[]
-    liste_paires_parag=[]
-    cpt_parag_trop_petits=0
+    list_sections=[]
+    list_pairs_parag=[]
+
     for element in diff_article:
         
         new_num_section_1,new_num_section_2=get_new_num_section(element)
         
         new_num_parag_1,new_num_parag_2=get_new_num_parag(element)
         
-        section_les_deux_changent=(old_num_section_1!=new_num_section_1) and (old_num_section_2!=new_num_section_2)
-        section_source_change_cible_vide=(old_num_section_1!=new_num_section_1) and (old_num_section_2+new_num_section_2==-4)
-        section_source_vide_cible_change=(old_num_section_1+new_num_section_1==-4) and (old_num_section_2!=new_num_section_2)
+        section_both_change=(old_num_section_1!=new_num_section_1) and (old_num_section_2!=new_num_section_2)
+        section_source_change_target_empty=(old_num_section_1!=new_num_section_1) and (old_num_section_2+new_num_section_2==-4)
+        section_source_empty_target_change=(old_num_section_1+new_num_section_1==-4) and (old_num_section_2!=new_num_section_2)
         
-        parag_les_deux_changent=(old_num_parag_1!=new_num_parag_1) and (old_num_parag_2!=new_num_parag_2)
-        parag_source_change_cible_vide=(old_num_parag_1!=new_num_parag_1) and (old_num_parag_2+new_num_parag_2==-4)
-        parag_source_vide_cible_change=(old_num_parag_1+new_num_parag_1==-4) and (old_num_parag_2!=new_num_parag_2)
+        parag_both_change=(old_num_parag_1!=new_num_parag_1) and (old_num_parag_2!=new_num_parag_2)
+        parag_source_change_target_empty=(old_num_parag_1!=new_num_parag_1) and (old_num_parag_2+new_num_parag_2==-4)
+        parag_source_empty_target_change=(old_num_parag_1+new_num_parag_1==-4) and (old_num_parag_2!=new_num_parag_2)
         
-        if section_les_deux_changent or section_source_change_cible_vide or section_source_vide_cible_change:
-            liste_paires_parag.append((aggreg_parag_1,aggreg_parag_2))
+        if section_both_change or section_source_change_target_empty or section_source_empty_target_change:
+            list_pairs_parag.append((aggreg_parag_1,aggreg_parag_2))
 
             aggreg_parag_1=[]
             aggreg_parag_2=[]
-            liste_sections.append(liste_paires_parag)
-            liste_paires_parag=[]
-        elif parag_les_deux_changent or parag_source_change_cible_vide or parag_source_vide_cible_change:
-            liste_paires_parag.append((aggreg_parag_1,aggreg_parag_2))
+            list_sections.append(list_pairs_parag)
+            list_pairs_parag=[]
+        elif parag_both_change or parag_source_change_target_empty or parag_source_empty_target_change:
+            list_pairs_parag.append((aggreg_parag_1,aggreg_parag_2))
             
             aggreg_parag_1=[]
             aggreg_parag_2=[]
@@ -180,155 +172,154 @@ def get_list_paires_parag(diff_article,seuil_bas=0.5):
         old_num_parag_1=new_num_parag_1
         old_num_parag_2=new_num_parag_2        
                       
-        pourcentage_modif_1,pourcentage_modif_2,longueur_phrase_1,longueur_phrase_2=calcul_pourcentages_modifs(element)
-        prct1_round=round(pourcentage_modif_1*100,2)
-        prct2_round=round(pourcentage_modif_2*100,2)
-        #Cas I vert
+        percentage_modif_1,percentage_modif_2,length_sent_1,length_sent_2=calculation_modifications_percentage(element)
+        prct1_round=round(percentage_modif_1*100,2)
+        prct2_round=round(percentage_modif_2*100,2)
+        #Case I green
         if len(element['edits-combination'])==0:
-            #Cas I.1 vert après autre couleur (jaune/rouge)
-            aggreg_parag_1.append({"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(longueur_phrase_1)+"|","couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_1})
-            aggreg_parag_2.append({"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(longueur_phrase_2)+"|","couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_2})
+            #Case I.1 green after another colour (yellow/red)
+            aggreg_parag_1.append({"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(length_sent_1)+"|","colour":'black',"sep":'',"flush":True,"length":length_sent_1})
+            aggreg_parag_2.append({"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(length_sent_2)+"|","colour":'black',"sep":'',"flush":True,"length":length_sent_2})
            
-            aggreg_parag_1.append({"text":element['text-sentence-1'],"couleur":'green',"sep":'\n',"flush":False})
-            aggreg_parag_2.append({"text":element['text-sentence-1'],"couleur":'green',"sep":'\n',"flush":False})
+            aggreg_parag_1.append({"text":element['text-sentence-1'],"colour":'green',"sep":'\n',"flush":False})
+            aggreg_parag_2.append({"text":element['text-sentence-1'],"colour":'green',"sep":'\n',"flush":False})
 
-        #Cas II bleu
-        elif (pourcentage_modif_1<seuil_bas) and (pourcentage_modif_2<seuil_bas):
-            #Imprimer en bleu les zones modifiées et en vert les autres
-            fin_prec_1=0
-            fin_prec_2=0
-            liste_intentions=[]
+        #Case II blue
+        elif (percentage_modif_1<low_threshold) and (percentage_modif_2<low_threshold):
+            #Blue for modified segment and green for identical ones
+            end_previous_1=0
+            end_previous_2=0
+            list_intentions=[]
             for idx_elt in range(len(element['edits-combination'])):
-                liste_intentions.append(element['edits-combination'][str(idx_elt)]["intention"])
-            liste_intentions=list(set(liste_intentions))
-            aggreg_parag_1.append({"list_intentions":liste_intentions,"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(longueur_phrase_1)+"|"+str(prct1_round)+" "+str(prct2_round),"couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_1,"prct_modif":prct1_round})
-            aggreg_parag_2.append({"list_intentions":liste_intentions,"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(longueur_phrase_2)+"|"+str(prct1_round)+" "+str(prct2_round),"couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_2,"prct_modif":prct2_round})
+                list_intentions.append(element['edits-combination'][str(idx_elt)]["intention"])
+            list_intentions=list(set(list_intentions))
+            aggreg_parag_1.append({"list_intentions":list_intentions,"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(length_sent_1)+"|"+str(prct1_round)+" "+str(prct2_round),"colour":'black',"sep":'',"flush":True,"length":length_sent_1,"prct_modif":prct1_round})
+            aggreg_parag_2.append({"list_intentions":list_intentions,"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(length_sent_2)+"|"+str(prct1_round)+" "+str(prct2_round),"colour":'black',"sep":'',"flush":True,"length":length_sent_2,"prct_modif":prct2_round})
                   
             for idx_elt in range(len(element['edits-combination'])):
-                debut_sent1=0
-                fin_sent1=0
+                begin_sent1=0
+                end_sent1=0
                          
                 if type(element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])==list:
-                    debut_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
-                    fin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
+                    begin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
+                    end_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
                     
                     if type(element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])==list:
-                        debut_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
-                        fin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
+                        begin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
+                        end_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
 
-                        if sont_egales_sans_espaces(element['text-sentence-1'][debut_sent1:fin_sent1],element['text-sentence-2'][debut_sent2:fin_sent2]):
-                            aggreg_parag_1.append({"text":element['text-sentence-1'][fin_prec_1:debut_sent1],"couleur":'cyan',"sep":'',"flush":True})
-                            aggreg_parag_1.append({"text":element['text-sentence-1'][debut_sent1:fin_sent1],"couleur":'cyan',"sep":'',"flush":True})
+                        if are_equals_without_space(element['text-sentence-1'][begin_sent1:end_sent1],element['text-sentence-2'][begin_sent2:end_sent2]):
+                            aggreg_parag_1.append({"text":element['text-sentence-1'][end_previous_1:begin_sent1],"colour":'cyan',"sep":'',"flush":True})
+                            aggreg_parag_1.append({"text":element['text-sentence-1'][begin_sent1:end_sent1],"colour":'cyan',"sep":'',"flush":True})
                         else:
-                            aggreg_parag_1.append({"text":element['text-sentence-1'][fin_prec_1:debut_sent1],"couleur":'cyan',"sep":'',"flush":True})
-                            aggreg_parag_1.append({"text":element['text-sentence-1'][debut_sent1:fin_sent1],"couleur":'blue',"sep":'',"flush":True})
+                            aggreg_parag_1.append({"text":element['text-sentence-1'][end_previous_1:begin_sent1],"colour":'cyan',"sep":'',"flush":True})
+                            aggreg_parag_1.append({"text":element['text-sentence-1'][begin_sent1:end_sent1],"colour":'blue',"sep":'',"flush":True})
 
                     else:
-                        aggreg_parag_1.append({"text":element['text-sentence-1'][fin_prec_1:debut_sent1],"couleur":'cyan',"sep":'',"flush":True})
-                        aggreg_parag_1.append({"text":element['text-sentence-1'][debut_sent1:fin_sent1],"couleur":'blue',"sep":'',"flush":True})
-                    fin_prec_1=fin_sent1
-            aggreg_parag_1.append({"text":element['text-sentence-1'][fin_prec_1:],"couleur":'cyan',"sep":'\n',"flush":False})
+                        aggreg_parag_1.append({"text":element['text-sentence-1'][end_previous_1:begin_sent1],"colour":'cyan',"sep":'',"flush":True})
+                        aggreg_parag_1.append({"text":element['text-sentence-1'][begin_sent1:end_sent1],"colour":'blue',"sep":'',"flush":True})
+                    end_previous_1=end_sent1
+            aggreg_parag_1.append({"text":element['text-sentence-1'][end_previous_1:],"colour":'cyan',"sep":'\n',"flush":False})
                 
             for idx_elt in range(len(element['edits-combination'])):
-                debut_sent2=0
-                fin_sent2=0
+                begin_sent2=0
+                end_sent2=0
                                      
                 if type(element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'])==list:
-                    debut_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
-                    fin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
+                    begin_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][0]
+                    end_sent2=element['edits-combination'][str(idx_elt)]['sentence-2-token-indices'][1]
                     
                     if type(element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'])==list:
-                        debut_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
-                        fin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
-                        if sont_egales_sans_espaces(element['text-sentence-1'][debut_sent1:fin_sent1],element['text-sentence-2'][debut_sent2:fin_sent2]):
-                            aggreg_parag_2.append({"text":element['text-sentence-2'][fin_prec_2:debut_sent2],"couleur":'cyan',"sep":'',"flush":True})
-                            aggreg_parag_2.append({"text":element['text-sentence-2'][debut_sent2:fin_sent2],"couleur":'cyan',"sep":'',"flush":True})
+                        begin_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][0]
+                        end_sent1=element['edits-combination'][str(idx_elt)]['sentence-1-token-indices'][1]
+                        if are_equals_without_space(element['text-sentence-1'][begin_sent1:end_sent1],element['text-sentence-2'][begin_sent2:end_sent2]):
+                            aggreg_parag_2.append({"text":element['text-sentence-2'][end_previous_2:begin_sent2],"colour":'cyan',"sep":'',"flush":True})
+                            aggreg_parag_2.append({"text":element['text-sentence-2'][begin_sent2:end_sent2],"colour":'cyan',"sep":'',"flush":True})
                         else:
-                            aggreg_parag_2.append({"text":element['text-sentence-2'][fin_prec_2:debut_sent2],"couleur":'cyan',"sep":'',"flush":True})
-                            aggreg_parag_2.append({"text":element['text-sentence-2'][debut_sent2:fin_sent2],"couleur":'blue',"sep":'',"flush":True})
+                            aggreg_parag_2.append({"text":element['text-sentence-2'][end_previous_2:begin_sent2],"colour":'cyan',"sep":'',"flush":True})
+                            aggreg_parag_2.append({"text":element['text-sentence-2'][begin_sent2:end_sent2],"colour":'blue',"sep":'',"flush":True})
                     else:
                         
-                        aggreg_parag_2.append({"text":element['text-sentence-2'][fin_prec_2:debut_sent2],"couleur":'cyan',"sep":'',"flush":True})
-                        aggreg_parag_2.append({"text":element['text-sentence-2'][debut_sent2:fin_sent2],"couleur":'blue',"sep":'',"flush":True})
-                    fin_prec_2=fin_sent2
-            aggreg_parag_2.append({"text":element['text-sentence-2'][fin_prec_2:],"couleur":'cyan',"sep":'\n',"flush":False})
+                        aggreg_parag_2.append({"text":element['text-sentence-2'][end_previous_2:begin_sent2],"colour":'cyan',"sep":'',"flush":True})
+                        aggreg_parag_2.append({"text":element['text-sentence-2'][begin_sent2:end_sent2],"colour":'blue',"sep":'',"flush":True})
+                    end_previous_2=end_sent2
+            aggreg_parag_2.append({"text":element['text-sentence-2'][end_previous_2:],"colour":'cyan',"sep":'\n',"flush":False})
                 
-            reset=True
-        #Cas III: rouge/jaune
+        #Case III: red/yellow
         else:
-            liste_intentions=[]
+            list_intentions=[]
             for idx_elt in range(len(element['edits-combination'])):
-                liste_intentions.append(element['edits-combination'][str(idx_elt)]["intention"])
-            liste_intentions=list(set(liste_intentions))
-            aggreg_parag_1.append({"list_intentions":liste_intentions,"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(longueur_phrase_1)+"|"+str(prct1_round)+" "+str(prct2_round),"couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_1,"prct_modif":prct1_round})
-            aggreg_parag_1.append({"text":element['text-sentence-1'],"couleur":'yellow',"sep":'\n',"flush":False})
+                list_intentions.append(element['edits-combination'][str(idx_elt)]["intention"])
+            list_intentions=list(set(list_intentions))
+            aggreg_parag_1.append({"list_intentions":list_intentions,"text":str(new_num_parag_1)+"|"+str(len(element['text-sentence-1']))+"-"+str(length_sent_1)+"|"+str(prct1_round)+" "+str(prct2_round),"colour":'black',"sep":'',"flush":True,"length":length_sent_1,"prct_modif":prct1_round})
+            aggreg_parag_1.append({"text":element['text-sentence-1'],"colour":'yellow',"sep":'\n',"flush":False})
             
-            aggreg_parag_2.append({"list_intentions":liste_intentions,"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(longueur_phrase_2)+"|"+str(prct1_round)+" "+str(prct2_round),"couleur":'black',"sep":'',"flush":True,"longueur":longueur_phrase_2,"prct_modif":prct2_round})
-            aggreg_parag_2.append({"text":element['text-sentence-2'],"couleur":'red',"sep":'\n',"flush":False})
+            aggreg_parag_2.append({"list_intentions":list_intentions,"text":str(new_num_parag_2)+"|"+str(len(element['text-sentence-2']))+"-"+str(length_sent_2)+"|"+str(prct1_round)+" "+str(prct2_round),"colour":'black',"sep":'',"flush":True,"length":length_sent_2,"prct_modif":prct2_round})
+            aggreg_parag_2.append({"text":element['text-sentence-2'],"colour":'red',"sep":'\n',"flush":False})
     
-    return liste_sections
+    return list_sections
 
 # III - Filters
 
-def is_long_enough(paire_parag,longueur_minimum=250):    
-    parag_source=[element for element in paire_parag[0] if element['couleur']=="black" ]
-    parag_cible=[element for element in paire_parag[1] if element['couleur']=="black" ]
-    longeur_parag_1=sum([ligne_source["longueur"] for ligne_source in parag_source])
-    longeur_parag_2=sum([ligne_cible["longueur"] for ligne_cible in parag_cible])
+def is_long_enough(pair_parags,minimum_length=250):    
+    parag_source=[element for element in pair_parags[0] if element['colour']=="black" ]
+    parag_target=[element for element in pair_parags[1] if element['colour']=="black" ]
+    length_parag_1=sum([line_source["length"] for line_source in parag_source])
+    length_parag_2=sum([line_target["length"] for line_target in parag_target])
     
-    return (max(longeur_parag_1,longeur_parag_2)>longueur_minimum)    
+    return (max(length_parag_1,length_parag_2)>minimum_length)    
 
-def respect_limit_modifs(paire_parag, prct_mini_phrase=25,prct_mini_parag=10, prct_maxi=90, lg_modif_maxi=200,prct_maxi_parag=40):
-    parag_source=[element for element in paire_parag[0] if element['couleur']=="black" ]        
-    parag_cible=[element for element in paire_parag[1] if element['couleur']=="black" ]
-    all_colors=set([ligne_source["couleur"] for ligne_source in paire_parag[0]]+[ligne_cible["couleur"] for ligne_cible in paire_parag[1]])
-    prct_modif_max=max([0]+[max(ligne_source["prct_modif"],ligne_cible["prct_modif"]) for (ligne_source, ligne_cible) in zip(parag_source, parag_cible) if "prct_modif" in ligne_source.keys()])
-    longueur_plus_maxi_parag1=sum([ligne_source["longueur"] for (ligne_source, ligne_cible) in zip(parag_source, parag_cible) if ("prct_modif" in ligne_source.keys() and max(ligne_source["prct_modif"],ligne_cible["prct_modif"])>prct_maxi) ])
-    longueur_plus_maxi_parag2=sum([ligne_cible["longueur"] for (ligne_source, ligne_cible) in zip(parag_source, parag_cible) if ("prct_modif" in ligne_source.keys() and max(ligne_source["prct_modif"],ligne_cible["prct_modif"])>prct_maxi) ])
-    longueur_totale_parag1=sum([ligne_source["longueur"] for ligne_source in parag_source])
-    longueur_totale_parag2=sum([ligne_cible["longueur"] for ligne_cible in parag_cible])
+def respect_limit_modifs(pair_parags, prct_mini_sent=25,prct_mini_parag=10, prct_max=90, length_modif_max=200,prct_max_parag=40):
+    parag_source=[element for element in pair_parags[0] if element['colour']=="black" ]        
+    parag_target=[element for element in pair_parags[1] if element['colour']=="black" ]
+    all_colors=set([line_source["colour"] for line_source in pair_parags[0]]+[line_target["colour"] for line_target in pair_parags[1]])
+    prct_modif_max=max([0]+[max(line_source["prct_modif"],line_target["prct_modif"]) for (line_source, line_target) in zip(parag_source, parag_target) if "prct_modif" in line_source.keys()])
+    length_sum_max_parag1=sum([line_source["length"] for (line_source, line_target) in zip(parag_source, parag_target) if ("prct_modif" in line_source.keys() and max(line_source["prct_modif"],line_target["prct_modif"])>prct_max) ])
+    length_sum_max_parag2=sum([line_target["length"] for (line_source, line_target) in zip(parag_source, parag_target) if ("prct_modif" in line_source.keys() and max(line_source["prct_modif"],line_target["prct_modif"])>prct_max) ])
+    length_total_parag1=sum([line_source["length"] for line_source in parag_source])
+    length_total_parag2=sum([line_target["length"] for line_target in parag_target])
    
-    longueur_modif_parag1=sum([ligne_source["prct_modif"]*ligne_source["longueur"] for (ligne_source, ligne_cible) in zip(parag_source, parag_cible) if "prct_modif" in ligne_source.keys()])
-    longueur_modif_parag2=sum([ligne_cible["prct_modif"]*ligne_cible["longueur"] for (ligne_source, ligne_cible) in zip(parag_source, parag_cible) if "prct_modif" in ligne_source.keys()])
+    length_modif_parag1=sum([line_source["prct_modif"]*line_source["length"] for (line_source, line_target) in zip(parag_source, parag_target) if "prct_modif" in line_source.keys()])
+    length_modif_parag2=sum([line_target["prct_modif"]*line_target["length"] for (line_source, line_target) in zip(parag_source, parag_target) if "prct_modif" in line_source.keys()])
 
-    if longueur_totale_parag1>0:
-        prct_modif_parag1=longueur_modif_parag1/longueur_totale_parag1
+    if length_total_parag1>0:
+        prct_modif_parag1=length_modif_parag1/length_total_parag1
     else:
         prct_modif_parag1=0
-    if longueur_totale_parag2>0:
-        prct_modif_parag2=longueur_modif_parag2/longueur_totale_parag2
+    if length_total_parag2>0:
+        prct_modif_parag2=length_modif_parag2/length_total_parag2
     else:
         prct_modif_parag2=0
         
-    if longueur_totale_parag1==0 and longueur_totale_parag2==0:
+    if length_total_parag1==0 and length_total_parag2==0:
         return False
-    elif longueur_totale_parag1==0:
-        trop_de_modif=(longueur_plus_maxi_parag2/longueur_totale_parag2<prct_maxi_parag/100)
-    elif longueur_totale_parag2==0:
-        trop_de_modif=(longueur_plus_maxi_parag1/longueur_totale_parag1<prct_maxi_parag/100)
+    elif length_total_parag1==0:
+        too_much_modifications=(length_sum_max_parag2/length_total_parag2<prct_max_parag/100)
+    elif length_total_parag2==0:
+        too_much_modifications=(length_sum_max_parag1/length_total_parag1<prct_max_parag/100)
     else:
-        trop_de_modif=(max(longueur_plus_maxi_parag1/longueur_totale_parag1,longueur_plus_maxi_parag2/longueur_totale_parag2)<prct_maxi_parag/100)
+        too_much_modifications=(max(length_sum_max_parag1/length_total_parag1,length_sum_max_parag2/length_total_parag2)<prct_max_parag/100)
     
-    trop_de_modif=trop_de_modif or (max(longueur_plus_maxi_parag1,longueur_plus_maxi_parag2)<lg_modif_maxi)
+    too_much_modifications=too_much_modifications or (max(length_sum_max_parag1,length_sum_max_parag2)<length_modif_max)
     
     if len(all_colors.intersection({"yellow","red"}))==0:
         prct_mini_blue_only=20
-        longueur_phrases_modif_parag1=sum([ligne_source["longueur"] for ligne_source in parag_source if ("prct_modif" in ligne_source.keys() ) ])
-        longueur_phrases_modif_parag2=sum([ligne_cible["longueur"] for ligne_cible in parag_cible if ("prct_modif" in ligne_cible.keys() )])
-        if longueur_phrases_modif_parag1>0:
-            prct_modif_parag1_blue=longueur_modif_parag1/longueur_phrases_modif_parag1
+        length_sent_modif_parag1=sum([line_source["length"] for line_source in parag_source if ("prct_modif" in line_source.keys())])
+        length_sent_modif_parag2=sum([line_target["length"] for line_target in parag_target if ("prct_modif" in line_target.keys())])
+        if length_sent_modif_parag1>0:
+            prct_modif_parag1_blue=length_modif_parag1/length_sent_modif_parag1
         else:
             prct_modif_parag1_blue=0
-        if longueur_phrases_modif_parag2>0:
-            prct_modif_parag2_blue=longueur_modif_parag2/longueur_phrases_modif_parag2
+        if length_sent_modif_parag2>0:
+            prct_modif_parag2_blue=length_modif_parag2/length_sent_modif_parag2
         else:
             prct_modif_parag2_blue=0
         if "green" in all_colors:
-            return  prct_modif_max>prct_mini_phrase and trop_de_modif and max(prct_modif_parag1,prct_modif_parag2)> prct_mini_parag and max(prct_modif_parag1_blue,prct_modif_parag2_blue)> prct_mini_blue_only 
+            return  prct_modif_max>prct_mini_sent and too_much_modifications and max(prct_modif_parag1,prct_modif_parag2)> prct_mini_parag and max(prct_modif_parag1_blue,prct_modif_parag2_blue)> prct_mini_blue_only 
         else:
-            return  prct_modif_max>prct_mini_phrase and trop_de_modif and max(prct_modif_parag1_blue,prct_modif_parag2_blue)> prct_mini_blue_only 
+            return  prct_modif_max>prct_mini_sent and too_much_modifications and max(prct_modif_parag1_blue,prct_modif_parag2_blue)> prct_mini_blue_only 
     else:
-        return  prct_modif_max>prct_mini_phrase and trop_de_modif and max(prct_modif_parag1,prct_modif_parag2)> prct_mini_parag        
+        return  prct_modif_max>prct_mini_sent and too_much_modifications and max(prct_modif_parag1,prct_modif_parag2)> prct_mini_parag        
     
 def count_special_characters(paragraph):
     # Define a list of special characters and patterns to count
@@ -343,25 +334,25 @@ def count_special_characters(paragraph):
 
     return character_counts
 
-def contains_too_many_equations(paire_parag, threshold=11):
+def contains_too_many_equations(pair_parags, threshold=11):
     # Extract draft and revised paragraphs from the pair
-    draft_paragraph=' '.join([element["text"] for element in paire_parag[0] if (element['couleur']!="black")])
-    revised_paragraph=' '.join([element["text"] for element in paire_parag[1] if (element['couleur']!="black")])
+    draft_paragraph  =' '.join([element["text"] for element in pair_parags[0] if (element['colour']!="black")])
+    revised_paragraph=' '.join([element["text"] for element in pair_parags[1] if (element['colour']!="black")])
     #Extract only the rewritten sentences
-    draft_paragraph_no_green=' '.join([element["text"] for element in paire_parag[0] if (element['couleur']!="green" and element['couleur']!="black")])
-    revised_paragraph_no_green=' '.join([element["text"] for element in paire_parag[1] if (element['couleur']!="green" and element['couleur']!="black")])
+    draft_paragraph_no_green  =' '.join([element["text"] for element in pair_parags[0] if (element['colour']!="green" and element['colour']!="black")])
+    revised_paragraph_no_green=' '.join([element["text"] for element in pair_parags[1] if (element['colour']!="green" and element['colour']!="black")])
 
     # Count special characters in each paragraph
-    draft_character_counts = count_special_characters(draft_paragraph)
+    draft_character_counts   = count_special_characters(draft_paragraph)
     revised_character_counts = count_special_characters(revised_paragraph)
     # Count special characters in each paragraph only in rewritten sentences
-    draft_character_counts_no_green = count_special_characters(draft_paragraph_no_green)
+    draft_character_counts_no_green   = count_special_characters(draft_paragraph_no_green)
     revised_character_counts_no_green = count_special_characters(revised_paragraph_no_green)
 
     # Calculate the total count of special characters in each paragraph
-    draft_total_count = 2*sum(draft_character_counts.values())+ 7*draft_character_counts["\\(cid:\\d+\\)"]+ 9*draft_character_counts["\\[Equation\\]"]
+    draft_total_count   = 2*sum(draft_character_counts.values())+ 7*draft_character_counts["\\(cid:\\d+\\)"]+ 9*draft_character_counts["\\[Equation\\]"]
     revised_total_count = 2*sum(revised_character_counts.values())+ 7*revised_character_counts["\\(cid:\\d+\\)"]+9*revised_character_counts["\\[Equation\\]"]
-    draft_total_count_no_green = 2*sum(draft_character_counts_no_green.values())+ 7*draft_character_counts_no_green["\\(cid:\\d+\\)"]+ 9*draft_character_counts_no_green["\\[Equation\\]"]
+    draft_total_count_no_green   = 2*sum(draft_character_counts_no_green.values())+ 7*draft_character_counts_no_green["\\(cid:\\d+\\)"]+ 9*draft_character_counts_no_green["\\[Equation\\]"]
     revised_total_count_no_green = 2*sum(revised_character_counts_no_green.values())+ 7*revised_character_counts_no_green["\\(cid:\\d+\\)"]+ 9*revised_character_counts_no_green["\\[Equation\\]"]
 
     # Check if either paragraph has too many special characters
@@ -398,317 +389,310 @@ def check_incorrect_beginning_ending(sentence):
     return (re.match(r'^[^a-zA-Z]*[A-Z].*([\.\?!:]\s*$|\.[a-zA-Z/.]+\s*$)', sentence) is None)
     
 #Return true if there is a problem detected in the last sentence
-def last_is_problem(phrase_source,phrase_cible):
+def last_is_problem(sentence_source,sentence_target):
     #Remove the tags
-    phrase_source_no_tag=remove_tags(phrase_source["text"])
-    phrase_cible_no_tag=remove_tags(phrase_cible["text"])
+    sentence_source_no_tag=remove_tags(sentence_source["text"])
+    sentence_target_no_tag=remove_tags(sentence_target["text"])
     #Remove tags and spaces
-    phrase_source_condens=enlever_espaces(remove_tags(phrase_source["text"]))
-    phrase_cible_condens=enlever_espaces(remove_tags(phrase_cible["text"]))
+    sentence_source_condensed=remove_spaces(remove_tags(sentence_source["text"]))
+    sentence_target_condensed=remove_spaces(remove_tags(sentence_target["text"]))
 
     #If the source sentence is not empty, does it have an incorrect ending?
-    fin_1_ko= (len(phrase_source["text"])>0) and check_incorrect_ending(phrase_source_no_tag)
+    end_1_ko= (len(sentence_source["text"])>0) and check_incorrect_ending(sentence_source_no_tag)
     #If the target sentence is not empty, does it have an incorrect ending?
-    fin_2_ko= (len(phrase_cible["text"])>0) and check_incorrect_ending(phrase_cible_no_tag)
+    end_2_ko= (len(sentence_target["text"])>0) and check_incorrect_ending(sentence_target_no_tag)
     #If one of the sentences have an incorrect ending, exit the function with True
-    if fin_1_ko or fin_2_ko:
+    if end_1_ko or end_2_ko:
         return True
     
     #Case 1: Heavy change
-    if (phrase_source["couleur"]=="yellow") and (phrase_cible["couleur"]=="red"):
-    #Est ce quele plus grand est plus petit que 3 fois le plus petit?
+    if (sentence_source["colour"]=="yellow") and (sentence_target["colour"]=="red"):
+    #Is the longer one smaller than 3 times the length of the smallest one?
         #Case A: The target is longer
-        if phrase_source_condens<phrase_cible_condens:
+        if sentence_source_condensed<sentence_target_condensed:
             #Is the source equal to the beginning of the target?
-            is_included= (phrase_cible_condens[0:len(phrase_source_condens)]==phrase_source_condens)
+            is_included= (sentence_target_condensed[0:len(sentence_source_condensed)]==sentence_source_condensed)
             #Is the target more than 3 time the length of the source? (Too much text difference)
-            is_too_long=(len(phrase_cible_condens)>3*len(phrase_source_condens))
+            is_too_long=(len(sentence_target_condensed)>3*len(sentence_source_condensed))
             return is_included or is_too_long
         #Case B: The source is longer
         else:
             #Is the target equal to the beginning of the source?
-            is_included= (phrase_source_condens[0:len(phrase_cible_condens)]==phrase_cible_condens)
+            is_included= (sentence_source_condensed[0:len(sentence_target_condensed)]==sentence_target_condensed)
             #Is the source more than 3 time the length of the target? (Too much text difference)
-            is_too_long=(len(phrase_source_condens)>3*len(phrase_cible_condens))
+            is_too_long=(len(sentence_source_condensed)>3*len(sentence_target_condensed))
             return  is_included or is_too_long
     #Case 2: Moderate change or no change, if moderate change, correctness of ending have been checked previously
     else:
         return False
     
 #Return true if there is a problem detected in the last sentence
-def last_is_problem_extended(phrase_source,phrase_cible):
+def last_is_problem_extended(sentence_source,sentence_target):
     #Remove the tags
-    phrase_source_no_tag=remove_tags(phrase_source["text"])
-    phrase_cible_no_tag=remove_tags(phrase_cible["text"])
+    sentence_source_no_tag=remove_tags(sentence_source["text"])
+    sentence_target_no_tag=remove_tags(sentence_target["text"])
     #Remove tags and spaces
-    phrase_source_condens=enlever_espaces(remove_tags(phrase_source["text"]))
-    phrase_cible_condens=enlever_espaces(remove_tags(phrase_cible["text"]))
+    sentence_source_condensed=remove_spaces(remove_tags(sentence_source["text"]))
+    sentence_target_condensed=remove_spaces(remove_tags(sentence_target["text"]))
 
     #If the source sentence is not empty, does it have an incorrect ending?
-    fin_1_ko= (len(phrase_source["text"])>0) and check_incorrect_ending(phrase_source_no_tag)
+    end_1_ko= (len(sentence_source["text"])>0) and check_incorrect_ending(sentence_source_no_tag)
     #If the target sentence is not empty, does it have an incorrect ending?
-    fin_2_ko= (len(phrase_cible["text"])>0) and check_incorrect_ending(phrase_cible_no_tag)
+    end_2_ko= (len(sentence_target["text"])>0) and check_incorrect_ending(sentence_target_no_tag)
     #If one of the sentences have an incorrect ending, exit the function with True
-    if fin_1_ko or fin_2_ko:
+    if end_1_ko or end_2_ko:
         return True
     
     #Case 1: Deletion of a sentence
-    if (phrase_source["couleur"]=="yellow") and ((phrase_cible["couleur"]!="red") or len(phrase_cible["text"])==0):                                                
-        return check_incorrect_beginning_ending(phrase_source_no_tag)
+    if (sentence_source["colour"]=="yellow") and ((sentence_target["colour"]!="red") or len(sentence_target["text"])==0):                                                
+        return check_incorrect_beginning_ending(sentence_source_no_tag)
     #Case 2: Addition of a sentence
-    elif (phrase_cible["couleur"]=="red") and ((phrase_source["couleur"]!="yellow") or len(phrase_source["text"])==0):
-        return check_incorrect_beginning_ending(phrase_cible_no_tag)
+    elif (sentence_target["colour"]=="red") and ((sentence_source["colour"]!="yellow") or len(sentence_source["text"])==0):
+        return check_incorrect_beginning_ending(sentence_target_no_tag)
     #Cas 3: Heavy change
-    elif (phrase_source["couleur"]=="yellow") and (phrase_cible["couleur"]=="red"):
-    #Est ce quele plus grand est plus petit que 3 fois le plus petit?
+    elif (sentence_source["colour"]=="yellow") and (sentence_target["colour"]=="red"):
+    # Is the longest one smaller than 3 times the smallest one?
         #Case A: The target is longer
-        if phrase_source_condens<phrase_cible_condens:
+        if sentence_source_condensed<sentence_target_condensed:
             #Is the source equal to the beginning of the target?
-            is_included= (phrase_cible_condens[0:len(phrase_source_condens)]==phrase_source_condens)
+            is_included= (sentence_target_condensed[0:len(sentence_source_condensed)]==sentence_source_condensed)
             #Is the target more than 3 time the length of the source? (Too much text difference)
-            is_too_long=(len(phrase_cible_condens)>3*len(phrase_source_condens))
+            is_too_long=(len(sentence_target_condensed)>3*len(sentence_source_condensed))
             return is_included or is_too_long
         #Case B: The source is longer
         else:
             #Is the target equal to the beginning of the source?
-            is_included= (phrase_source_condens[0:len(phrase_cible_condens)]==phrase_cible_condens)
+            is_included= (sentence_source_condensed[0:len(sentence_target_condensed)]==sentence_target_condensed)
             #Is the source more than 3 time the length of the target? (Too much text difference)
-            is_too_long=(len(phrase_source_condens)>3*len(phrase_cible_condens))
+            is_too_long=(len(sentence_source_condensed)>3*len(sentence_target_condensed))
             return  is_included or is_too_long
     #Case 4: Moderate change or no change, if moderate change, correctness of ending have been checked previously
     else:
         return False
     
-def first_is_problem(phrase_source,phrase_cible):
-    #Remove the tags
-    phrase_source_no_tag=remove_tags(phrase_source["text"])
-    phrase_cible_no_tag=remove_tags(phrase_cible["text"])
+def first_is_problem(sentence_source,sentence_target):
     #Remove tags and spaces
-    phrase_source_condens=enlever_espaces(remove_tags(phrase_source["text"]))
-    phrase_cible_condens=enlever_espaces(remove_tags(phrase_cible["text"]))
+    sentence_source_condensed=remove_spaces(remove_tags(sentence_source["text"]))
+    sentence_target_condensed=remove_spaces(remove_tags(sentence_target["text"]))
     
-    #Cas que jaune
-    if len(phrase_source["text"])>0:
+    #Case yellow only
+    if len(sentence_source["text"])>0:
         #Check that the first alphabetical letter is a capital letter
-        debut_1_ko= check_incorrect_beginning(phrase_source["text"])
+        debut_1_ko= check_incorrect_beginning(sentence_source["text"])
     else:
         debut_1_ko=False
-    if len(phrase_cible["text"])>0:
-        debut_2_ko= check_incorrect_beginning(phrase_cible["text"])
+    if len(sentence_target["text"])>0:
+        debut_2_ko= check_incorrect_beginning(sentence_target["text"])
     else:
         debut_2_ko=False
     if debut_1_ko or debut_2_ko:
         #Raise a problem in the first sentence is for one of them the first alphabetical letter is NOT a capital letter
         return True
     
-    if (phrase_source["couleur"]=="yellow") and (len(phrase_cible["text"])==0):
-        return len(phrase_source_condens)>0
-    #Cas que rouge
-    elif (phrase_cible["couleur"]=="red") and (len(phrase_source["text"])==0):
-        return len(phrase_cible_condens)>0
-    #Cas jaune et rouge 
-    elif (phrase_source["couleur"]=="yellow") and (phrase_cible["couleur"]=="red"):
-        #est ce que le plus petit est égal à la fin du plus grand
-        if phrase_source_condens<phrase_cible_condens:
+    if (sentence_source["colour"]=="yellow") and (len(sentence_target["text"])==0):
+        return len(sentence_source_condensed)>0
+    #Case red only
+    elif (sentence_target["colour"]=="red") and (len(sentence_source["text"])==0):
+        return len(sentence_target_condensed)>0
+    #Case yellow and red 
+    elif (sentence_source["colour"]=="yellow") and (sentence_target["colour"]=="red"):
+        #Is the smallest equal to the end of the longest?
+        if sentence_source_condensed<sentence_target_condensed:
             #Is the source equal to the end of the target?
-            is_included=phrase_cible_condens[len(phrase_cible_condens)-len(phrase_source_condens):len(phrase_cible_condens)]==phrase_source_condens
+            is_included=sentence_target_condensed[len(sentence_target_condensed)-len(sentence_source_condensed):len(sentence_target_condensed)]==sentence_source_condensed
             #Is the target more than 3 time the length of the source? (Too much text difference)
-            is_too_long=(len(phrase_cible_condens)>3*len(phrase_source_condens))
+            is_too_long=(len(sentence_target_condensed)>3*len(sentence_source_condensed))
             return is_too_long or is_included
         else:
             #Is the target equal to the end of the source?
-            is_included=phrase_source_condens[len(phrase_source_condens)-len(phrase_cible_condens):len(phrase_source_condens)]==phrase_cible_condens
+            is_included=sentence_source_condensed[len(sentence_source_condensed)-len(sentence_target_condensed):len(sentence_source_condensed)]==sentence_target_condensed
             #Is the source more than 3 time the length of the target? (Too much text difference)
-            is_too_long=(len(phrase_source_condens)>3*len(phrase_cible_condens))
+            is_too_long=(len(sentence_source_condensed)>3*len(sentence_target_condensed))
             return  is_too_long or is_included
-    #Cas bleu:
-    elif (phrase_source["couleur"] in ["blue","cyan"]):
-        #Cas bleu modif
-        #est ce que le plus petit est égal à la fin du plus grand
-        if (phrase_source["couleur"]=="blue") and (phrase_cible["couleur"]=="blue"):
-            if phrase_source_condens<phrase_cible_condens:
+    #Case blue
+    elif (sentence_source["colour"] in ["blue","cyan"]):
+        #Case blue modif
+        #Is the smallest equal to the end of the longest?
+        if (sentence_source["colour"]=="blue") and (sentence_target["colour"]=="blue"):
+            if sentence_source_condensed<sentence_target_condensed:
                 #Is the source equal to the end of the target?
-                return phrase_cible_condens[len(phrase_cible_condens)-len(phrase_source_condens):len(phrase_cible_condens)]==phrase_source_condens
+                return sentence_target_condensed[len(sentence_target_condensed)-len(sentence_source_condensed):len(sentence_target_condensed)]==sentence_source_condensed
             else:
                 #Is the target equal to the end of the source?
-                return phrase_source_condens[len(phrase_source_condens)-len(phrase_cible_condens):len(phrase_source_condens)]==phrase_cible_condens
-        #Cas bleu ajout unilatéral
-        elif (phrase_source["couleur"]=="blue") and (phrase_cible["couleur"]=="cyan"):
-            return len(phrase_source["text"])>10
+                return sentence_source_condensed[len(sentence_source_condensed)-len(sentence_target_condensed):len(sentence_source_condensed)]==sentence_target_condensed
+        #Case blue unilateral addition
+        elif (sentence_source["colour"]=="blue") and (sentence_target["colour"]=="cyan"):
+            return len(sentence_source["text"])>10
             
-        elif (phrase_source["couleur"]=="cyan") and (phrase_cible["couleur"]=="blue"):
-            return len(phrase_cible["text"])>10
-    #else: cas vert vert normalement ou bleu sans modif sur le début de phrase
+        elif (sentence_source["colour"]=="cyan") and (sentence_target["colour"]=="blue"):
+            return len(sentence_target["text"])>10
+    # Case green only or blue without modification on the beginning of the sentence
     else:
         return False
     
-def ajout_last_or_first(paire_parag):
-    parag_source=[element for element in paire_parag[0] if ((len(element['text'])>0 or element["couleur"] in ["yellow","red"]) and element['couleur']!="black")]
-    parag_cible=[element for element in paire_parag[1] if  ((len(element['text'])>0 or element["couleur"] in ["yellow","red"]) and element['couleur']!="black")]
-    is_last=(parag_source[-1]["couleur"] in ["yellow","red","blue"]) or (parag_cible[-1]["couleur"] in ["yellow","red","blue"])
-    is_first=first_is_problem(parag_source[0],parag_cible[0])
+def addition_last_or_first(pair_parags):
+    parag_source=[element for element in pair_parags[0] if ((len(element['text'])>0 or element["colour"] in ["yellow","red"]) and element['colour']!="black")]
+    parag_target=[element for element in pair_parags[1] if  ((len(element['text'])>0 or element["colour"] in ["yellow","red"]) and element['colour']!="black")]
+    is_last=(parag_source[-1]["colour"] in ["yellow","red","blue"]) or (parag_target[-1]["colour"] in ["yellow","red","blue"])
+    is_first=first_is_problem(parag_source[0],parag_target[0])
     if is_last:
-        is_last=last_is_problem(parag_source[-1],parag_cible[-1])
+        is_last=last_is_problem(parag_source[-1],parag_target[-1])
     return is_first or is_last
 
-def verif_balise(liste_text_1, full_text_2):
-    baliseok=True
-    if len(liste_text_1)>0:
-        idx_debut=0
+def tag_verification(list_text_1, full_text_2):
+    tag_ok=True
+    if len(list_text_1)>0:
+        idx_beginning=0
         #We don't consider the tag at the beginning
-        while liste_text_1[idx_debut] in ["[Table]","[Figure]","[Equation]"]:
-            idx_debut+=1
-        idx_fin=len(liste_text_1)
+        while list_text_1[idx_beginning] in ["[Table]","[Figure]","[Equation]"]:
+            idx_beginning+=1
+        idx_end=len(list_text_1)
         #We don't consider the tags at the end
-        while liste_text_1[idx_fin-1] in ["[Table]","[Figure]","[Equation]"]:
-            idx_fin-=1
+        while list_text_1[idx_end-1] in ["[Table]","[Figure]","[Equation]"]:
+            idx_end-=1
         
-        cropped_liste_text_1=liste_text_1[idx_debut:idx_fin]
+        cropped_list_text_1=list_text_1[idx_beginning:idx_end]
         
         #After the tags at the beginning, does the paragraph start correctly?
-        if idx_debut!=0:
-            baliseok = baliseok and not(check_incorrect_beginning(cropped_liste_text_1[0]))
+        if idx_beginning!=0:
+            tag_ok = tag_ok and not(check_incorrect_beginning(cropped_list_text_1[0]))
         #Before the tags at the end, does the paragraph end correctly
-        if idx_fin!=len(cropped_liste_text_1):
-            baliseok = baliseok and not(check_incorrect_ending(cropped_liste_text_1[-1]))
-        if not baliseok:
-            return baliseok
+        if idx_end!=len(cropped_list_text_1):
+            tag_ok = tag_ok and not(check_incorrect_ending(cropped_list_text_1[-1]))
+        if not tag_ok:
+            return tag_ok
         else:
-            idx_balise=0
+            idx_tag=0
             #Was some text incorrectly replaced by a tag?
-            while idx_balise<len(cropped_liste_text_1):
-                if cropped_liste_text_1[idx_balise] in ["[Table]","[Figure]","[Equation]"]:
-                    new_tag_no_replace= (cropped_liste_text_1[idx_balise-1]+cropped_liste_text_1[idx_balise+1] in enlever_espaces(full_text_2))
-                    no_change= (cropped_liste_text_1[idx_balise-1]+cropped_liste_text_1[idx_balise]+cropped_liste_text_1[idx_balise+1] in enlever_espaces(full_text_2))
-                    baliseok=baliseok and (new_tag_no_replace or no_change)
-                idx_balise+=1
-    return baliseok
+            while idx_tag<len(cropped_list_text_1):
+                if cropped_list_text_1[idx_tag] in ["[Table]","[Figure]","[Equation]"]:
+                    new_tag_no_replace= (cropped_list_text_1[idx_tag-1]+cropped_list_text_1[idx_tag+1] in remove_spaces(full_text_2))
+                    no_change= (cropped_list_text_1[idx_tag-1]+cropped_list_text_1[idx_tag]+cropped_list_text_1[idx_tag+1] in remove_spaces(full_text_2))
+                    tag_ok=tag_ok and (new_tag_no_replace or no_change)
+                idx_tag+=1
+    return tag_ok
 
 
-def balise_ok(parag): 
-    parag_source=[phrase["text"] for phrase in parag[0] if phrase["couleur"]!="black"]
-    parag_cible=[phrase["text"] for phrase in parag[1] if phrase["couleur"]!="black"]
+def is_tag_ok(parag): 
+    parag_source=[sentence["text"] for sentence in parag[0] if sentence["colour"]!="black"]
+    parag_target=[sentence["text"] for sentence in parag[1] if sentence["colour"]!="black"]
 
-    text_source,text_cible=recollage_parag_nocolor(parag_source,parag_cible)
-    liste_text_source=text_source.split(" ")
-    liste_text_cible=text_cible.split(" ")
+    text_source,text_target=assembling_parag_nocolor(parag_source,parag_target)
+    list_text_source=text_source.split(" ")
+    list_text_target=text_target.split(" ")
     
-    baliseok=True
-    if len(liste_text_source)>0:
-        baliseok= baliseok and verif_balise(liste_text_source, text_cible)
-    if len(parag_cible)>0:
-        baliseok= baliseok and verif_balise(liste_text_cible, text_source)
-    return baliseok
+    tag_ok=True
+    if len(list_text_source)>0:
+        tag_ok= tag_ok and tag_verification(list_text_source, text_target)
+    if len(parag_target)>0:
+        tag_ok= tag_ok and tag_verification(list_text_target, text_source)
+    return tag_ok
 
 # IV - Prepare export mini corpus
 
-def remove_tags_avec_espaces(chaine):
-# Fonction pour enlever les balises spécifiques
-    balises = [" [Figure]", " [Equation]", " [Table]"]
-    for balise in balises:
-        chaine = chaine.replace(balise, "")
-    balises = ["[Figure] ", "[Equation] ", "[Table] "]
-    for balise in balises:
-        chaine = chaine.replace(balise, "")
-    balises = ["[Figure]", "[Equation]", "[Table]"]
-    for balise in balises:
-        chaine = chaine.replace(balise, "")
-    return chaine
+def remove_tags_with_spaces(string):
+# Function to remove specific tags
+    tags = [" [Figure]", " [Equation]", " [Table]"]
+    for tag in tags:
+        string = string.replace(tag, "")
+    tags = ["[Figure] ", "[Equation] ", "[Table] "]
+    for tag in tags:
+        string = string.replace(tag, "")
+    tags = ["[Figure]", "[Equation]", "[Table]"]
+    for tag in tags:
+        string = string.replace(tag, "")
+    return string
 
-def difference_tiret(chaine1, chaine2):
-    # Vérifie si les longueurs des chaînes diffèrent exactement de 1
-    if abs(len(chaine1) - len(chaine2)) != 1:
+def difference_dash(string1, string2):
+    # Checks if string lengths differ by exactly 1
+    if abs(len(string1) - len(string2)) != 1:
         return False
-    
-    # Identifie la chaîne la plus courte et la plus longue
-    courte = min(chaine1, chaine2, key=len)
-    longue = max(chaine1, chaine2, key=len)
 
     # Supprime tous les tirets des deux chaînes
-    chaine1_sans_tiret = chaine1.replace("-", "")
-    chaine2_sans_tiret = chaine2.replace("-", "")
+    string1_without_dash = string1.replace("-", "")
+    string2_without_dash = string2.replace("-", "")
 
     # Vérifie si les chaînes sont identiques après suppression des tirets
-    if chaine1_sans_tiret == chaine2_sans_tiret:
+    if string1_without_dash == string2_without_dash:
         return True
     return False
 
-def corrections_espaces_et_tirets(parag):
+def corrections_spaces_and_dash(parag):
     source=parag[0]
-    cible=parag[1]
+    target=parag[1]
     not_end_source=True
-    not_end_cible=True
+    not_end_target=True
     idx_source=0
-    idx_cible=0
-    while not_end_source and not_end_cible:
-        phrase_source=source[idx_source]['text']
-        phrase_cible=cible[idx_cible]['text']
-        if (source[idx_source]['couleur']=='cyan') and (cible[idx_cible]['couleur']=='cyan'):
-            if len(phrase_source)!=len(phrase_cible) and sont_egales_sans_espaces(phrase_source,phrase_cible):
-                if len(phrase_source)>len(phrase_cible):
-                    parag[1][idx_cible]['text']=source[idx_source]['text']
+    idx_target=0
+    while not_end_source and not_end_target:
+        sentence_source=source[idx_source]['text']
+        sentence_target=target[idx_target]['text']
+        if (source[idx_source]['colour']=='cyan') and (target[idx_target]['colour']=='cyan'):
+            if len(sentence_source)!=len(sentence_target) and are_equals_without_space(sentence_source,sentence_target):
+                if len(sentence_source)>len(sentence_target):
+                    parag[1][idx_target]['text']=source[idx_source]['text']
                 else:
-                    parag[0][idx_source]['text']=cible[idx_cible]['text']
+                    parag[0][idx_source]['text']=target[idx_target]['text']
             idx_source+=1
-            idx_cible+=1
-        elif (source[idx_source]['couleur']=='blue') and (cible[idx_cible]['couleur']=='cyan'):
+            idx_target+=1
+        elif (source[idx_source]['colour']=='blue') and (target[idx_target]['colour']=='cyan'):
             idx_source+=1
-        elif (source[idx_source]['couleur']=='cyan') and (cible[idx_cible]['couleur']=='blue'):
-            idx_cible+=1
-        elif (source[idx_source]['couleur']=='blue') and (cible[idx_cible]['couleur']=='blue'):
-            if difference_tiret(phrase_source,phrase_cible):
-                if len(phrase_source)>len(phrase_cible):
-                    parag[1][idx_cible]['text']=source[idx_source]['text']                    
+        elif (source[idx_source]['colour']=='cyan') and (target[idx_target]['colour']=='blue'):
+            idx_target+=1
+        elif (source[idx_source]['colour']=='blue') and (target[idx_target]['colour']=='blue'):
+            if difference_dash(sentence_source,sentence_target):
+                if len(sentence_source)>len(sentence_target):
+                    parag[1][idx_target]['text']=source[idx_source]['text']                    
                 else:
-                    parag[0][idx_source]['text']=cible[idx_cible]['text']                    
-                parag[1][idx_cible]['couleur']='cyan'
-                parag[0][idx_source]['couleur']='cyan'
+                    parag[0][idx_source]['text']=target[idx_target]['text']                    
+                parag[1][idx_target]['colour']='cyan'
+                parag[0][idx_source]['colour']='cyan'
             idx_source+=1
-            idx_cible+=1
+            idx_target+=1
         else:
-            #cas jr ou v 
+            # Case yellow/red or green
             idx_source+=1
-            idx_cible+=1
+            idx_target+=1
         if (idx_source==len(source)):
             not_end_source=False
-        if (idx_cible==len(cible)):
-            not_end_cible=False
+        if (idx_target==len(target)):
+            not_end_target=False
     return parag
 
-def recollage_sentence(sentence):                          
+def assembling_sentence(sentence):                          
     end_with_space=True
-    sentence_complet=""
-    for ligne in sentence:
-        if len(ligne)>0:
-            start_with_space=(ligne[0]==' ')
+    full_sentence=""
+    for line in sentence:
+        if len(line)>0:
+            start_with_space=(line[0]==' ')
             if end_with_space or start_with_space:
-                sentence_complet+=ligne
+                full_sentence+=line
             else:
-                sentence_complet+=' '
-                sentence_complet+=ligne
-            end_with_space=(ligne[-1]==' ')
-    return  sentence_complet
+                full_sentence+=' '
+                full_sentence+=line
+            end_with_space=(line[-1]==' ')
+    return  full_sentence
 
 def get_list_sentences(parag):
-    liste_parag=[]
+    list_parag=[]
     wait_for_blue=True
-    liste_blue=[]
-    for phrase in parag:
-        if phrase["couleur"]=="black":
+    list_blue=[]
+    for sentence in parag:
+        if sentence["colour"]=="black":
             if not(wait_for_blue):
-                liste_parag.append({"text":recollage_sentence(liste_blue)})
+                list_parag.append({"text":assembling_sentence(list_blue)})
                 wait_for_blue=True
-                liste_blue=[]            
-        elif (phrase["couleur"] in ["blue","cyan"]):
-            liste_blue.append(remove_tags_avec_espaces(phrase["text"]))
+                list_blue=[]            
+        elif (sentence["colour"] in ["blue","cyan"]):
+            list_blue.append(remove_tags_with_spaces(sentence["text"]))
             wait_for_blue=False
-        elif (phrase["couleur"] =="green"):
-            liste_parag.append({"text":remove_tags_avec_espaces(phrase["text"])})
+        elif (sentence["colour"] =="green"):
+            list_parag.append({"text":remove_tags_with_spaces(sentence["text"])})
         else:
-            liste_parag.append({"text":remove_tags_avec_espaces(phrase["text"])})
+            list_parag.append({"text":remove_tags_with_spaces(sentence["text"])})
     if not(wait_for_blue):
-                liste_parag.append({"text":recollage_sentence(liste_blue)})     
-    return liste_parag            
+                list_parag.append({"text":assembling_sentence(list_blue)})     
+    return list_parag            
 
 if __name__ == "__main__":
 
@@ -722,82 +706,84 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     path_json=args.importpath
-    liste_articles=os.listdir(path_json)
+    casimir_files=["article_pairs_train.jsonl","article_pairs_dev.jsonl","article_pairs_test.jsonl"]
 
     dico_all_parag_select={}
+    for filename in casimir_files:
+        id_pair_source=""
+        id_pair_target=""
+        current_article=[]
+        with open(path_json+"/"+filename, 'r') as article_file:
+            for line in article_file:
+                current_sentence=json.loads(line.strip('\n'))
+                
+                if id_pair_source!=current_sentence["id_version_1"]:
+                    if len(current_article)>0:
+                        list_section=get_list_pairs_parag(current_article)
 
-    for filename in liste_articles:
-        article=import_data(path_json,filename)
-        liste_section=get_list_paires_parag(article)
+                        list_parag_valid=[]
+                        for section in list_section:
+                            for parag in section:   
+                                long_enough=is_long_enough(parag)            
+                                if long_enough:
+                                    prct_modif_ok=respect_limit_modifs(parag)
+                                    if prct_modif_ok:
+                                        equations_ok= not(contains_too_many_equations(parag,threshold=9))
+                                        if equations_ok:
+                                            last_first_ok=not(addition_last_or_first(parag))
+                                            if last_first_ok:
+                                                tag_ok=is_tag_ok(parag)
+                                                if tag_ok:
+                                                    list_parag_valid.append(parag)                         
+            
+                        if len(list_parag_valid)>0:
+                            dico_all_parag_select[id_pair_source+"."+id_pair_target]=list_parag_valid   
 
-        liste_parag_valides=[]
-        for section in liste_section:
-            for parag in section:   
-                assez_grand=is_long_enough(parag)            
-                if assez_grand:
-                    prct_modif_ok=respect_limit_modifs(parag)
-                    if prct_modif_ok:
-                        equations_ok= not(contains_too_many_equations(parag,threshold=9))
-                        if equations_ok:
-                            last_first_ok=not(ajout_last_or_first(parag))
-                            if last_first_ok:
-                                baliseok=balise_ok(parag)
-                                if baliseok:
-                                    liste_parag_valides.append(parag)                         
-   
-        if len(liste_parag_valides)>0:
-            dico_all_parag_select[filename[:-6]]=liste_parag_valides    
+                    current_article=[current_sentence]
+                else:
+                    current_article.append(current_sentence)
 
-    liste_test_export=list(dico_all_parag_select.keys())
+                id_pair_source=current_sentence["id_version_1"]
+                id_pair_target=current_sentence["id_version_2"]
 
-    # Saving 1 : Colorfull, for displaying and easier annotation by humans
+            if len(current_article)>0:
+                list_section=get_list_pairs_parag(current_article)
+
+                list_parag_valid=[]
+                for section in list_section:
+                    for parag in section:   
+                        long_enough=is_long_enough(parag)            
+                        if long_enough:
+                            prct_modif_ok=respect_limit_modifs(parag)
+                            if prct_modif_ok:
+                                equations_ok= not(contains_too_many_equations(parag,threshold=9))
+                                if equations_ok:
+                                    last_first_ok=not(addition_last_or_first(parag))
+                                    if last_first_ok:
+                                        tag_ok=is_tag_ok(parag)
+                                        if tag_ok:
+                                            list_parag_valid.append(parag)                         
+            
+                if len(list_parag_valid)>0:
+                    dico_all_parag_select[id_pair_source+"."+id_pair_target]=list_parag_valid   
+
+
+    list_test_export=list(dico_all_parag_select.keys())
+
+    # Saving : Full parag and sentences    
 
     export_path=args.exportpath
-    with open(export_path+"gloubiboulga_colorfull.jsonl", 'w') as corpus_file:
-        for filename in liste_test_export:
-            idx_parag=0        
-            for parag in dico_all_parag_select[filename]:
-                parag=corrections_espaces_et_tirets(parag)
-                source_file, cible_file=filename.split('.')[0], filename.split('.')[1]
-                liste_parag1, liste_parag2,list_intentions =[], [], []
-                for phrase in parag[0]:
-                    if phrase["couleur"]=="black":
-                        if "list_intentions" in phrase.keys():
-                            list_intentions=phrase["list_intentions"]
-                        else:
-                            list_intentions=[]
-                    else:
-                        liste_parag1.append({"color":phrase["couleur"],"text":remove_tags_avec_espaces(phrase["text"])})
-                for phrase in parag[1]:
-                    if phrase["couleur"]=="black":
-                        if "list_intentions" in phrase.keys():
-                            list_intentions=phrase["list_intentions"]
-                        else:
-                            list_intentions=[]
-                    else:
-                        liste_parag2.append({"color":phrase["couleur"],"text":remove_tags_avec_espaces(phrase["text"])})
-
-                json.dump({'id_source':source_file,"id_cible":cible_file,"index_paragraph":idx_parag,"id_paragraph":filename+'.'+str(idx_parag).zfill(2),
-                           "parag-1":liste_parag1,
-                           "parag-2":liste_parag2
-                          },corpus_file)
-                idx_parag+=1
-                corpus_file.write('\n')   
-
-    # Saving 2: Full parag and sentence, no color info, for general use    
-
-    export_path=args.exportpath
-    with open(export_path+"gloubiboulga.jsonl", 'w', encoding='utf8') as corpus_file:
-        for filename in liste_test_export:
+    with open(export_path+"/pararev.jsonl", 'w', encoding='utf8') as corpus_file:
+        for filename in list_test_export:
             idx_parag=0   
             for parag in dico_all_parag_select[filename]:
-                parag=corrections_espaces_et_tirets(parag)
-                source_file,cible_file=filename.split('.')[0],filename.split('.')[1]
+                parag=corrections_spaces_and_dash(parag)
+                source_file,target_file=filename.split('.')[0],filename.split('.')[1]
                 liste_sentences_1,liste_sentences_2=get_list_sentences(parag[0]),get_list_sentences(parag[1])
-                liste_parag1=[remove_tags_avec_espaces(phrase["text"]) for phrase in parag[0] if phrase["couleur"]!="black"]
-                liste_parag2=[remove_tags_avec_espaces(phrase["text"]) for phrase in parag[1] if phrase["couleur"]!="black"]
-                parag1,parag2=recollage_parag_nocolor(liste_parag1,liste_parag2)
-                json.dump({'id_source':source_file,"id_cible":cible_file,"index_paragraph":idx_parag,"id_paragraph":filename+'.'+str(idx_parag).zfill(2),
+                list_parag1=[remove_tags_with_spaces(sentence["text"]) for sentence in parag[0] if sentence["colour"]!="black"]
+                list_parag2=[remove_tags_with_spaces(sentence["text"]) for sentence in parag[1] if sentence["colour"]!="black"]
+                parag1,parag2=assembling_parag_nocolor(list_parag1,list_parag2)
+                json.dump({'id_source':source_file,"id_target":target_file,"index_paragraph":idx_parag,"id_paragraph":filename+'.'+str(idx_parag).zfill(2),
                            "parag-1":parag1,
                            "parag-2":parag2,
                            "list-sentences-1": liste_sentences_1,
