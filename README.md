@@ -17,23 +17,23 @@ You can find the paper associated to this repository on the [ACL Anthology](http
 
 Please cite it as:
 
-@inproceedings{jourdan-etal-2025-pararev,
-    title = "{P}ara{R}ev : Building a dataset for Scientific Paragraph Revision annotated with revision instruction",
-    author = "Jourdan, L{\'e}ane  and
-      Boudin, Florian  and
-      Dufour, Richard  and
-      Hernandez, Nicolas  and
-      Aizawa, Akiko",
-    editor = "Zock, Michael  and
-      Inui, Kentaro  and
-      Yuan, Zheng",
-    booktitle = "Proceedings of the First Workshop on Writing Aids at the Crossroads of AI, Cognitive Science and NLP (WRAICOGS 2025)",
-    month = jan,
-    year = "2025",
-    address = "Abu Dhabi, UAE",
-    publisher = "International Committee on Computational Linguistics",
-    url = "https://aclanthology.org/2025.wraicogs-1.4/",
-    pages = "35--44",
-    abstract = "Revision is a crucial step in scientific writing, where authors refine their work to improve clarity, structure, and academic quality. Existing approaches to automated writing assistance often focus on sentence-level revisions, which fail to capture the broader context needed for effective modification. In this paper, we explore the impact of shifting from sentence-level to paragraph-level scope for the task of scientific text revision. The paragraph level definition of the task allows for more meaningful changes, and is guided by detailed revision instructions rather than general ones. To support this task, we introduce ParaRev, the first dataset of revised scientific paragraphs with an evaluation subset manually annotated with revision instructions. Our experiments demonstrate that using detailed instructions significantly improves the quality of automated revisions compared to general approaches, no matter the model or the metric considered."
-}
+	@inproceedings{jourdan-etal-2025-pararev,
+    		title = "{P}ara{R}ev : Building a dataset for Scientific Paragraph Revision annotated with revision instruction",
+    		author = "Jourdan, L{\'e}ane  and
+      			Boudin, Florian  and
+      			Dufour, Richard  and
+      			Hernandez, Nicolas  and
+     			 Aizawa, Akiko",
+    		editor = "Zock, Michael  and
+      			Inui, Kentaro  and
+      			Yuan, Zheng",
+    		booktitle = "Proceedings of the First Workshop on Writing Aids at the Crossroads of AI, Cognitive Science and NLP (WRAICOGS 2025)",
+    		month = jan,
+    		year = "2025",
+    		address = "Abu Dhabi, UAE",
+    		publisher = "International Committee on Computational Linguistics",
+    		url = "https://aclanthology.org/2025.wraicogs-1.4/",
+    		pages = "35--44",
+   
+	}
 
