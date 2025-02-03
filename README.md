@@ -4,7 +4,7 @@
 
 
 #### Extract ParaRev from CASIMIR
-*script_extract_parags_from_casimir.py* can be used to reproce the work in our paper and extract [ParaRev](https://huggingface.co/datasets/taln-ls2n/pararev) from the [CASIMIR](https://huggingface.co/datasets/taln-ls2n/CASIMIR) dataset.
+*script_extract_parags_from_casimir.py* can be used to reproduce the work in our paper and extract [ParaRev](https://huggingface.co/datasets/taln-ls2n/pararev) from the [CASIMIR](https://huggingface.co/datasets/taln-ls2n/CASIMIR) dataset.
 
 
 #### Visualize the data
